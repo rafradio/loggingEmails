@@ -1,8 +1,7 @@
-
 let button = document.getElementById("request");
 let data = document.querySelectorAll(".new-dates");
+let idProject = document.getElementById("idProject");
 
-//dataToSend = "20240110";
 function requestApi(dataToSend) {
     let url = new URL(window.location.href);
     url.pathname = "/LoggingEmails/request.php";
@@ -12,7 +11,7 @@ function requestApi(dataToSend) {
                     'Content-Type': 'application/json;charset=utf-8',
 
                 },
-                body: dataToSend
+                body: JSON.stringify(dataToSend)
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -22,6 +21,7 @@ function requestApi(dataToSend) {
                         console.log(txtArray[0]);
                         console.log("Проверяем боди = ", data.test);
                         parseData(txtArray);
+                        document.getElementById("info").innerHTML = "";
                     } else {
                         document.getElementById("info").innerHTML = "Данных нет";
                     }
@@ -31,22 +31,37 @@ function requestApi(dataToSend) {
 }
             
 button.onclick = function () {
-    let myDate = new Date(data[0].value);
-    const convert = (dig) => (dig.length > 1) ? dig : "0" + dig;
-    
-    const options = {  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    let myDateString = myDate.getFullYear().toString() +  convert(parseInt(myDate.getMonth()+1).toString()) + convert(myDate.getDate().toString());
-    console.log(myDate.toLocaleDateString('en-us', options));
-    console.log(myDateString);
-    requestApi(myDateString);
+    if (data[0].value != "" && idProject.value != "0") {
+        console.log(data[0].value, idProject.options[idProject.selectedIndex].text);
+        let projectName = idProject.options[idProject.selectedIndex].text;
+        let myDate = new Date(data[0].value);
+        const convert = (dig) => (dig.length > 1) ? dig : "0" + dig;
+
+        const options = {  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        let myDateString = myDate.getFullYear().toString() +  convert(parseInt(myDate.getMonth()+1).toString()) + convert(myDate.getDate().toString());
+        console.log(myDate.toLocaleDateString('en-us', options));
+        console.log(myDateString);
+        let dataToSend = {"date": myDateString, "project": projectName};
+        requestApi(dataToSend);
+    } else {
+        document.getElementById("info").innerHTML = "Данные не выбраны";
+    }
 }
 
 function parseData(txtArray) {
     return new Promise ((resolve, reject) => {
         const elem = document.createElement('br');
+        let dataList = document.getElementById("filterList");
+        if (dataList.options.length > 0) {dataList.innerHTML = "";}
         let anketaData = [];
         let emailData = [];
-        let tableData = document.createElement('table');
+        let tableData = document.getElementById("myTable");
+        if (tableData == null) {
+            tableData = document.createElement('table');
+        }
+        else {
+            tableData.innerHTML = "";
+        };
         tableData.id = "myTable";
         txtArray.forEach((el, ind) => {
             let dataString = el.trim().split(" ");
@@ -63,8 +78,7 @@ function parseData(txtArray) {
 
         const createSelect = (data, id) => {
             const elemSelect = document.getElementById(id);
-//            let tr  = document.body.appendChild(elem);
-//            tr.id = id;
+            if (elemSelect.options.length > 0) {elemSelect.innerHTML = "";}
             let option = document.createElement("option");
             option.value = -1;
             option.text = (id == "idAnketa") ? "Выберите ID": "Выберите email";
@@ -76,10 +90,10 @@ function parseData(txtArray) {
                 elemSelect.add(option);
             });
         };
-        document.body.appendChild(elem);
+//        document.body.appendChild(elem);
         createSelect(anketaData, "idAnketa");
         createSelect(emailData, "emailUser");
-        document.body.appendChild(elem);
+//        document.body.appendChild(elem);
         document.body.appendChild(tableData);
         
         resolve();
@@ -93,6 +107,8 @@ function startAnalyse() {
     let emailUserFilter = document.getElementById("emailUser");
     let buttonForList = document.getElementById("filterData");
     let dataList = document.getElementById("filterList");
+    let findDataList = document.getElementById("findData");
+    let clearDataList = document.getElementById("cleanData");
     
     function findData() {
         let filter = this.options[this.selectedIndex].text;
@@ -122,10 +138,24 @@ function startAnalyse() {
                 dataList.insertBefore(option, dataList.firstChild);
             }
         });
-
     }
-    idAnketaFilter.onchange = findData.bind(idAnketaFilter);
-    emailUserFilter.onchange = findData.bind(emailUserFilter);
+    
+    findDataList.onclick = function() {
+        let tr = myTable.getElementsByTagName("tr");
+        Array.from(tr).forEach((elm, ind) => {
+            let txtValue = elm.getElementsByTagName("td")[0].innerHTML;
+            let flag = false;
+            [...dataList.options].map(o => o.text).forEach((elTxt, index) => {
+                if (txtValue.includes(elTxt)) flag = true;
+            });
+            elm.style.display = (flag) ? "block": "none";
+        });
+    }
+    
+    clearDataList.onclick = () => {dataList.innerHTML = "";}
+    
+//    idAnketaFilter.onchange = findData.bind(idAnketaFilter);
+//    emailUserFilter.onchange = findData.bind(emailUserFilter);
     
 
     
