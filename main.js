@@ -1,6 +1,25 @@
 let button = document.getElementById("request");
 let data = document.querySelectorAll(".new-dates");
 let idProject = document.getElementById("idProject");
+let testClean = document.getElementById("CleanAll");
+
+testClean.onclick = function() {
+    removeTillEnd(this);
+//    removeTillEnd();
+//    const func = removeTillEnd.bind(this);
+//    func();
+}
+
+function removeTillEnd(self) {
+    if (self.nextElementSibling != null && self.nextElementSibling.tagName != "SCRIPT" && self.nextElementSibling.id != "noDelete") {
+        console.log("nextElementSibling = ", self.nextElementSibling);
+        let element = self.nextElementSibling;
+        element.remove();
+        removeTillEnd(self);
+    } else {
+        return;
+    }
+}
 
 function requestApi(dataToSend) {
     let url = new URL(window.location.href);
